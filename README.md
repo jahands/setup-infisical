@@ -92,18 +92,20 @@ As with any action, consider pinning by commit SHA rather than a tag:
 
 ## Development
 
+This repo uses [nub](https://nubjs.com) as its package manager and script
+runner (the lockfile stays in npm format, so `npm ci`/`npm run` also work).
+
 ```bash
-npm ci --ignore-scripts  # install dependencies
-npm run all              # format check, lint, typecheck, knip, tests, bundle
+nub ci --ignore-scripts  # install dependencies
+nub run all              # format check, lint, typecheck, knip, tests, bundle
 cp .env.example .env     # one-time setup for local-action
-npm run local-action     # run the action locally via @github/local-action
+nub run local-action     # run the action locally via @github/local-action
 ```
 
-Node 24 is required (see `.node-version`); on older Node versions `npm ci`
-prints an `EBADENGINE` warning.
+Node 24 is required (see `.node-version`).
 
 The bundled `dist/index.js` is what runners execute — rebuild it with
-`npm run bundle` and commit `dist/` with your PR. The `check-dist` workflow
+`nub run bundle` and commit `dist/` with your PR. The `check-dist` workflow
 fails if the committed bundle does not match the source.
 
 ## License

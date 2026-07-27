@@ -7,7 +7,7 @@ agents alike.
 
 - Runners execute `dist/index.js` (plus `dist/licenses.txt` for
   attribution), not `src/`. After **every** change under `src/` (or to
-  dependencies), run `npm run bundle` and commit the resulting `dist/`
+  dependencies), run `nub run bundle` and commit the resulting `dist/`
   changes in the same PR. The `check-dist` job in ci.yml fails on drift.
 - `dist/index.js` is an ESM bundle with a `createRequire` banner (esbuild
   `--format=esm`). The banner is mandatory: without it, transitive CJS
@@ -18,14 +18,19 @@ agents alike.
 
 ## Local gate
 
-- `npm ci --ignore-scripts` then `npm run all` (format check, lint,
+- The package manager / script runner is nub (`nub ci`, `nub run`); the
+  lockfile stays in npm format (`package-lock.json`), which keeps
+  Dependabot and lockfile-keyed caches working. CI installs nub via
+  `nubjs/setup-nub` pinned to the same version as local dev — bump the
+  `nub-version` inputs in ci.yml together with local installs.
+- `nub ci --ignore-scripts` then `nub run all` (format check, lint,
   typecheck, knip, tests, bundle) must pass before pushing.
 - Linting is oxlint (`oxlint.config.ts`), run type-aware via
   `oxlint-tsgolint`. All enabled rules are errors — lint is a hard
-  gate, so there is no warn tier. `npm run lint:fix` applies
+  gate, so there is no warn tier. `nub run lint:fix` applies
   autofixes.
 - `actionlint` and `zizmor` run in CI only and are **not** covered by
-  `npm run all`; workflow changes need a green `lint-workflows` job.
+  `nub run all`; workflow changes need a green `lint-workflows` job.
 
 ## Changing the action's interface
 
