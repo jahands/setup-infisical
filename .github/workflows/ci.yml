@@ -1,0 +1,263 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-typescript:
+    name: TypeScript tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Check format
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Knip
+        run: npm run knip
+
+      - name: Test
+        run: npm run coverage
+
+  lint-workflows:
+    name: Lint workflows
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: actionlint
+        uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
+
+      - name: zizmor
+        uses: zizmorcore/zizmor-action@6fc4b006235f201fdab3722e17240ab420d580e5 # v0.6.1
+        with:
+          advanced-security: false
+          online-audits: false
+
+  validate-action-types:
+    name: Validate action types
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate action-types.yml
+        uses: typesafegithub/github-actions-typing@9ddf35b71a482be7d8922b28e8d00df16b77e315 # v2.2.2
+
+  test-action:
+    name: Integration (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # checksum = SHA-256 of the cli_0.43.114 release archive for the
+        # platform, from the release's checksums(-darwin).txt files.
+        include:
+          - os: ubuntu-latest # linux amd64
+            checksum: c35cdd1c4908b3ea6c0773279f8ae6993f9ec03b5e2d4a7cdc2f38ce89eb33d0
+          - os: ubuntu-24.04-arm # linux arm64
+            checksum: 8cea18cd32091cb3223b82fac9f2a9f71d9867bcc84a1a99e8028607d09e08bb
+          - os: macos-latest # darwin arm64
+            checksum: 0bb2cf9098e32038698250e4fcee2b6414476e11088d4ee24e574ecc039b51e4
+          - os: macos-15-intel # darwin amd64
+            checksum: 5d66815077a9460fe995a1b5babbc0140dc7dabec62529a67c516f204394f218
+          - os: windows-latest # windows amd64
+            checksum: c48bb7b458970420b362f72c12dbb2192553469a7536c14ed2d6f8ef54ab82c2
+          - os: windows-11-arm # windows arm64
+            checksum: 869746b4c7b614a1a2afee1cccae471d5faf4353e58b62174d6de82b4b10d07f
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The pinned + checksum install must run FIRST: once any step has put
+      # 0.43.114 into the runner tool cache, install() short-circuits before
+      # checksum verification, and the checksum input would silently go
+      # untested whenever `latest` resolves to the pinned version.
+      - name: Install pinned with a user-provided checksum
+        id: pinned
+        uses: ./
+        with:
+          version: 0.43.114
+          checksum: ${{ matrix.checksum }}
+
+      - name: Verify pinned
+        shell: bash
+        env:
+          PINNED_VERSION: ${{ steps.pinned.outputs.version }}
+        run: |
+          test "$PINNED_VERSION" = '0.43.114'
+          infisical --version | grep -F '0.43.114'
+
+      - name: Install latest
+        id: latest
+        uses: ./
+
+      - name: Verify latest
+        shell: bash
+        env:
+          RESOLVED_VERSION: ${{ steps.latest.outputs.version }}
+        run: |
+          [[ "$RESOLVED_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          infisical --version
+
+      - name: Install pinned again (same job)
+        id: again
+        uses: ./
+        with:
+          version: 0.43.114
+
+      - name: Verify cache-hit
+        shell: bash
+        env:
+          CACHE_HIT: ${{ steps.again.outputs.cache-hit }}
+        run: test "$CACHE_HIT" = 'true'
+
+  # Runs on a fresh runner after test-action has populated the Actions cache,
+  # proving a real cross-job cache restore (the in-job repeat above only
+  # exercises the runner tool cache).
+  test-action-cache:
+    name: Cache restore (${{ matrix.os }})
+    needs: test-action
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest # linux amd64
+          - ubuntu-24.04-arm # linux arm64
+          - macos-latest # darwin arm64
+          - macos-15-intel # darwin amd64
+          - windows-latest # windows amd64
+          - windows-11-arm # windows arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install pinned on a fresh runner
+        id: restored
+        uses: ./
+        with:
+          version: 0.43.114
+
+      - name: Verify Actions-cache hit
+        shell: bash
+        env:
+          CACHE_HIT: ${{ steps.restored.outputs.cache-hit }}
+          INFISICAL_PATH: ${{ steps.restored.outputs.infisical-path }}
+        run: |
+          test "$CACHE_HIT" = 'true'
+          "$INFISICAL_PATH" --version | grep -F '0.43.114'
+          infisical --version | grep -F '0.43.114'
+
+  # The integration jobs above run `uses: ./`, i.e. the *committed* bundle,
+  # so a src/ change without a rebuild would otherwise pass CI silently.
+  check-dist:
+    name: Check dist
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Rebuild dist
+        run: npm run bundle
+
+      - name: Compare directories
+        id: diff
+        run: |
+          if [ ! -d dist/ ]; then
+            echo 'Expected dist/ directory does not exist. See status below:'
+            ls -la ./
+            exit 1
+          fi
+          if [ "$(git diff --ignore-space-at-eol --text dist/ | wc -l)" -gt "0" ]; then
+            echo 'Detected uncommitted changes after build. See status below:'
+            git diff --ignore-space-at-eol --text dist/
+            exit 1
+          fi
+          # git diff only reports tracked files; also fail on new untracked
+          # build artifacts (e.g. an esbuild change emitting a sourcemap).
+          if [ -n "$(git status --porcelain dist/)" ]; then
+            echo 'Detected untracked files in dist/ after build. See status below:'
+            git status --porcelain dist/
+            exit 1
+          fi
+
+      - name: Upload expected dist
+        if: ${{ failure() && steps.diff.outcome == 'failure' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: expected-dist
+          path: dist/
+
+  # Single aggregation gate for branch protection: point the required status
+  # check here instead of at individual matrix legs, whose names change
+  # whenever the matrix does. Every job in this workflow must be listed in
+  # `needs`.
+  all-tests-passed:
+    name: All tests passed
+    needs:
+      - test-typescript
+      - lint-workflows
+      - validate-action-types
+      - test-action
+      - test-action-cache
+      - check-dist
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Some tests failed or were cancelled
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: |
+          echo 'Some tests failed or were cancelled'
+          exit 1
+
+      - name: All tests passed
+        run: echo 'All tests passed'

@@ -1,0 +1,32 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    ignore:
+      # TypeScript 7 ships no programmatic compiler API until 7.1 and
+      # typescript-eslint does not support it yet. Revisit once
+      # typescript-eslint declares TS 7 support.
+      - dependency-name: typescript
+        update-types:
+          - version-update:semver-major
+    groups:
+      npm-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions-minor-patch:
+        update-types:
+          - minor
+          - patch

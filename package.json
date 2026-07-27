@@ -1,0 +1,45 @@
+{
+  "name": "infisical-cli-action",
+  "description": "GitHub Action to install the Infisical CLI",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": "Jacob Hands",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "bundle": "esbuild src/index.ts --bundle --platform=node --target=node24 --format=esm --keep-names --banner:js=\"import { createRequire as __createRequire } from 'node:module'; const require = __createRequire(import.meta.url);\" --outfile=dist/index.js && npm run license",
+    "license": "generate-license-file --input package.json --output dist/licenses.txt --overwrite --ci --no-spinner --eol lf",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "coverage": "vitest run --coverage",
+    "knip": "knip",
+    "local-action": "local-action . src/main.ts .env",
+    "all": "npm run format:check && npm run lint && npm run typecheck && npm run knip && npm run test && npm run bundle"
+  },
+  "dependencies": {
+    "@actions/cache": "^6.2.0",
+    "@actions/core": "^3.0.1",
+    "@actions/http-client": "^4.0.1",
+    "@actions/tool-cache": "^4.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.0",
+    "@github/local-action": "^7.0.1",
+    "@types/node": "^24.0.0",
+    "@vitest/coverage-v8": "^4.1.10",
+    "esbuild": "^0.28.1",
+    "eslint": "^10.0.0",
+    "generate-license-file": "^4.1.1",
+    "knip": "^6.29.0",
+    "prettier": "^3.9.6",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.46.0",
+    "vitest": "^4.1.10"
+  }
+}
