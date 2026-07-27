@@ -19,6 +19,7 @@
     "src/**/*.ts",
     "__tests__/**/*.ts",
     "__fixtures__/**/*.ts",
-    "vitest.config.ts"
+    "vitest.config.ts",
+    "oxlint.config.ts"
   ]
 }

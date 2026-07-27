@@ -20,6 +20,10 @@ agents alike.
 
 - `npm ci --ignore-scripts` then `npm run all` (format check, lint,
   typecheck, knip, tests, bundle) must pass before pushing.
+- Linting is oxlint (`oxlint.config.ts`), run type-aware via
+  `oxlint-tsgolint`. All enabled rules are errors — lint is a hard
+  gate, so there is no warn tier. `npm run lint:fix` applies
+  autofixes.
 - `actionlint` and `zizmor` run in CI only and are **not** covered by
   `npm run all`; workflow changes need a green `lint-workflows` job.
 
@@ -46,6 +50,4 @@ Changing inputs or outputs means updating **all** of: `action.yml`,
 
 ## Toolchain holds
 
-- TypeScript stays on 6.x until typescript-eslint supports TS 7 (7.0
-  ships no compiler API; Dependabot is configured to ignore TS majors).
 - Keep `@types/node` aligned with `engines.node` (currently 24).
