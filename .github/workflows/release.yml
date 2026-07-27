@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  release:
+    types:
+      - published
+  # Escape hatch: re-run the major-tag move for an existing release if a run
+  # failed (e.g. a transient API error), without re-publishing the release.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to update the major version tag from
+        required: true
+        type: string
+
+permissions: {}
+
+# Never cancel a half-finished release; queue instead. The group is
+# workflow-wide (no ref) because release events run on per-tag refs, and two
+# releases published back to back must serialize, not race the tag move.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+# NOTE: actions/publish-immutable-action is deliberately absent: as of July
+# 2026 upstream still documents it as not ready for public use, and its
+# latest release (v0.0.4) runs on node20, which GitHub-hosted runners drop on
+# 2026-09-16. Revisit when immutable-action publishing is GA on node24.
+
+jobs:
+  update-major-tag:
+    name: Update major version tag
+    # Prereleases must not move the floating major tag.
+    if: ${{ !github.event.release.prerelease }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # force-push the floating major version tag
+    steps:
+      - name: Move the major version tag
+        uses: actions/publish-action@23f4c6f12633a2da8f44938b71fde9afec138fb4 # v0.4.0
+        with:
+          source-tag: ${{ inputs.tag || github.event.release.tag_name }}

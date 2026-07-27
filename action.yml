@@ -1,0 +1,43 @@
+name: Setup Infisical CLI
+description: Install the Infisical CLI and add it to PATH, with tool and Actions caching
+author: Jacob Hands
+
+branding:
+  icon: lock
+  color: yellow
+
+inputs:
+  version:
+    description: >-
+      Version of the Infisical CLI to install. Accepts an exact version with or
+      without a leading "v" (e.g. "0.43.114" or "v0.43.114"), or "latest".
+    default: latest
+  checksum:
+    description: >-
+      Expected SHA-256 checksum (64 hex characters) of the release archive
+      for this platform. When set, it is verified instead of the checksum
+      files published with the release, so the trusted digest lives in your
+      workflow file. Only meaningful together with a pinned "version".
+    default: ''
+  github-token:
+    description: >-
+      Token forwarded as the Authorization header on release-asset and
+      checksum downloads from github.com (useful behind authenticating
+      proxies or for private mirrors; not required on hosted runners).
+      Defaults to the workflow token on github.com and empty on GitHub
+      Enterprise Server (a GHES token is not valid against github.com).
+    default: ${{ github.server_url == 'https://github.com' && github.token || '' }}
+
+outputs:
+  version:
+    description: The resolved Infisical CLI version that was installed (bare semver, e.g. "0.43.114").
+  cache-hit:
+    description: >-
+      "true" if the CLI was restored from the runner tool cache or the GitHub
+      Actions cache; "false" if it was downloaded.
+  infisical-path:
+    description: Absolute path to the installed Infisical CLI binary.
+
+runs:
+  using: node24
+  main: dist/index.js

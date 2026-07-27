@@ -1,0 +1,17 @@
+# Input/output types for typed workflow DSLs.
+# See https://github.com/typesafegithub/github-actions-typing
+inputs:
+  version:
+    type: string
+  checksum:
+    type: string
+  github-token:
+    type: string
+
+outputs:
+  version:
+    type: string
+  cache-hit:
+    type: boolean
+  infisical-path:
+    type: string
