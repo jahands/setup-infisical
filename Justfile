@@ -73,9 +73,7 @@ deps-update:
 # Fix formatting, autofixable lint issues, and dependency ranges
 [group('3. Quality')]
 fix:
-  nub run format
-  nub run lint:fix
-  nub run deps:fix
+  nub run fix
 
 # ============================== #
 # ============ Build =========== #
