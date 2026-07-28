@@ -1,6 +1,6 @@
 # Setup Infisical CLI
 
-[![CI](https://github.com/jahands/infisical-cli-action/actions/workflows/ci.yml/badge.svg)](https://github.com/jahands/infisical-cli-action/actions/workflows/ci.yml)
+[![CI](https://github.com/jahands/setup-infisical/actions/workflows/ci.yml/badge.svg)](https://github.com/jahands/setup-infisical/actions/workflows/ci.yml)
 
 GitHub Action that installs the [Infisical CLI](https://infisical.com/docs/cli/overview)
 on the runner and adds it to `PATH`.
@@ -8,7 +8,7 @@ on the runner and adds it to `PATH`.
 ## Usage
 
 ```yaml
-- uses: jahands/infisical-cli-action@v1
+- uses: jahands/setup-infisical@v1
 - run: infisical --version
 ```
 
@@ -16,7 +16,7 @@ Pin an exact CLI version, or a semver range resolved against the published
 releases:
 
 ```yaml
-- uses: jahands/infisical-cli-action@v1
+- uses: jahands/setup-infisical@v1
   with:
     version: 0.43.114 # or a range like "0.43.x"
 ```
@@ -78,7 +78,7 @@ platform-specific; take it from the release's checksum files once and
 review it in your diff):
 
 ```yaml
-- uses: jahands/infisical-cli-action@v1
+- uses: jahands/setup-infisical@v1
   with:
     version: 0.43.114
     checksum: <sha256 of cli_0.43.114_<platform>_<arch> archive>
@@ -87,7 +87,7 @@ review it in your diff):
 As with any action, consider pinning by commit SHA rather than a tag:
 
 ```yaml
-- uses: jahands/infisical-cli-action@<commit-sha> # vX.Y.Z
+- uses: jahands/setup-infisical@<commit-sha> # vX.Y.Z
 ```
 
 ## Development

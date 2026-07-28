@@ -148,7 +148,7 @@ export function normalizeVersion(
 export async function resolveLatest(): Promise<Result<ResolvedVersion, VersionError>> {
 	return Result.gen(async function* () {
 		const url = `https://github.com/${OWNER}/${REPO}/releases/latest`
-		const client = new HttpClient('infisical-cli-action', [], {
+		const client = new HttpClient('setup-infisical', [], {
 			allowRedirects: false,
 		})
 		const response = yield* Result.await(
@@ -198,7 +198,7 @@ async function listReleaseVersions(
 	authorization: string | undefined
 ): Promise<Result<string[], HttpRequestError | GitHubApiError | ReleasesParseError>> {
 	return Result.gen(async function* () {
-		const client = new HttpClient('infisical-cli-action')
+		const client = new HttpClient('setup-infisical')
 		const headers: Record<string, string> = {
 			accept: 'application/vnd.github+json',
 			...(authorization ? { authorization } : {}),

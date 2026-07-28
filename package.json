@@ -1,5 +1,5 @@
 {
-	"name": "infisical-cli-action",
+	"name": "setup-infisical",
 	"version": "1.0.0",
 	"private": true,
 	"description": "GitHub Action to install the Infisical CLI",
@@ -9,7 +9,7 @@
 	"scripts": {
 		"all": "run-s format:check lint typecheck deps:check knip test bundle",
 		"bundle": "run-s bundle:js bundle:licenses",
-		"bundle:js": "esbuild src/bin/infisical-cli-action.bin.ts --bundle --platform=node --target=node24 --format=esm --minify --legal-comments=none --keep-names --banner:js=\"import { createRequire as __createRequire } from 'node:module'; const require = __createRequire(import.meta.url);\" --outfile=dist/index.js",
+		"bundle:js": "esbuild src/bin/setup-infisical.bin.ts --bundle --platform=node --target=node24 --format=esm --minify --legal-comments=none --keep-names --banner:js=\"import { createRequire as __createRequire } from 'node:module'; const require = __createRequire(import.meta.url);\" --outfile=dist/index.js",
 		"bundle:licenses": "generate-license-file --input package.json --output dist/licenses.txt --overwrite --ci --no-spinner --eol lf",
 		"coverage": "vitest run --coverage",
 		"deps:check": "syncpack lint",

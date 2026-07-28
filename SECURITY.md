@@ -9,7 +9,7 @@ the action by commit SHA (with a `# vX.Y.Z` comment) or use the floating
 ## Reporting a vulnerability
 
 Please do **not** open a public issue for security reports. Instead, use
-[GitHub private vulnerability reporting](https://github.com/jahands/infisical-cli-action/security/advisories/new)
+[GitHub private vulnerability reporting](https://github.com/jahands/setup-infisical/security/advisories/new)
 to file a report. You should receive a response within a few days.
 
 ## What this action does (threat surface)
