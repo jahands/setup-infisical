@@ -49,7 +49,7 @@
 		"prettier": "3.9.6",
 		"prettier-plugin-packagejson": "2.5.22",
 		"syncpack": "15.3.2",
-		"typescript": "6.0.3",
+		"typescript": "7.0.2",
 		"vitest": "4.1.10"
 	},
 	"engines": {
