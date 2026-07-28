@@ -8,7 +8,7 @@
 	"type": "module",
 	"scripts": {
 		"all": "nub run format:check && nub run lint && nub run typecheck && nub run knip && nub run test && nub run bundle",
-		"bundle": "esbuild src/index.ts --bundle --platform=node --target=node24 --format=esm --keep-names --banner:js=\"import { createRequire as __createRequire } from 'node:module'; const require = __createRequire(import.meta.url);\" --outfile=dist/index.js && nub run license",
+		"bundle": "esbuild src/index.ts --bundle --platform=node --target=node24 --format=esm --minify --legal-comments=none --keep-names --banner:js=\"import { createRequire as __createRequire } from 'node:module'; const require = __createRequire(import.meta.url);\" --outfile=dist/index.js && nub run license",
 		"coverage": "vitest run --coverage",
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",

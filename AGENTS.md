@@ -28,7 +28,9 @@ agents alike.
   `nubjs/setup-nub` resolve the project pin from that file, and mise
   reads it idiomatically, so it is the single source of truth.
 - `nub ci --ignore-scripts` then `nub run all` (format check, lint,
-  typecheck, knip, tests, bundle) must pass before pushing.
+  typecheck, knip, tests, bundle) must pass before pushing. The
+  `Justfile` wraps both (`just install`, `just check`) plus other
+  common tasks — see `just --list`.
 - Linting is oxlint (`oxlint.config.ts`), run type-aware via
   `oxlint-tsgolint`. All enabled rules are errors — lint is a hard
   gate, so there is no warn tier. `nub run lint:fix` applies
