@@ -1,4 +1,5 @@
 import { HttpClient } from '@actions/http-client'
+import { lt } from 'semver'
 
 import { MIN_VERSION, OWNER, REPO } from './constants.js'
 
@@ -7,23 +8,9 @@ export interface ResolvedVersion {
 	semver: string // '0.43.114' — used in asset filenames, cache keys, outputs
 }
 
+// Stricter than semver: rejects ranges, prereleases, and build metadata,
+// because the version is interpolated into release-tag URLs.
 const VERSION_RE = /^v?(\d+)\.(\d+)\.(\d+)$/
-
-function toTuple(semver: string): [number, number, number] {
-	const match = VERSION_RE.exec(semver)
-	if (!match) {
-		throw new Error(`Not a semver string: ${semver}`)
-	}
-	return [Number(match[1]), Number(match[2]), Number(match[3])]
-}
-
-function isOlderThan(a: string, b: string): boolean {
-	const [aMajor, aMinor, aPatch] = toTuple(a)
-	const [bMajor, bMinor, bPatch] = toTuple(b)
-	if (aMajor !== bMajor) return aMajor < bMajor
-	if (aMinor !== bMinor) return aMinor < bMinor
-	return aPatch < bPatch
-}
 
 export function normalizeVersion(input: string): ResolvedVersion {
 	const trimmed = input.trim()
@@ -34,7 +21,7 @@ export function normalizeVersion(input: string): ResolvedVersion {
 		)
 	}
 	const semver = trimmed.replace(/^v/, '')
-	if (isOlderThan(semver, MIN_VERSION)) {
+	if (lt(semver, MIN_VERSION)) {
 		throw new Error(
 			`Version ${semver} predates the ${OWNER}/${REPO} repository (oldest ` +
 				`available: ${MIN_VERSION}). Older CLI builds were published from the ` +
