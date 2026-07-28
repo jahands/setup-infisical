@@ -14,9 +14,8 @@ const VERSION_RE = /^v?(\d+)\.(\d+)\.(\d+)$/
 
 function invalidVersionError(input: string): Error {
 	return new Error(
-		`Invalid version "${input}". Expected an exact version like "0.43.114" ` +
-			'(optionally prefixed with "v"), a semver range like "0.43.x" or "0", ' +
-			'or "latest".'
+		`Invalid version "${input}". Expected an exact version like "0.43.114", ` +
+			'a semver range like "0.43.x", or "latest".'
 	)
 }
 

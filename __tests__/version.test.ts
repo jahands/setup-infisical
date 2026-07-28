@@ -32,9 +32,8 @@ describe('normalizeVersion', () => {
 
 	it.each(['0.43', '0.43.114-beta', 'main', ''])('rejects %j', (input) => {
 		expect(() => normalizeVersion(input)).toThrow(
-			`Invalid version "${input}". Expected an exact version like "0.43.114" ` +
-				'(optionally prefixed with "v"), a semver range like "0.43.x" or "0", ' +
-				'or "latest".'
+			`Invalid version "${input}". Expected an exact version like "0.43.114", ` +
+				'a semver range like "0.43.x", or "latest".'
 		)
 	})
 
@@ -186,8 +185,6 @@ describe('resolveVersion', () => {
 		expect(httpClient.get).not.toHaveBeenCalled()
 	})
 
-	// v-prefixed ranges are accepted (semver's parser tolerates the prefix)
-	// but intentionally undocumented.
 	it.each(['0', '0.43', '0.43.x', '^0.43.0', 'v0', 'v0.43', 'v0.43.x', '^v0.43.0'])(
 		'resolves the range %j via the releases API',
 		async (input) => {

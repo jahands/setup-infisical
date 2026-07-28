@@ -3,7 +3,7 @@
 # .mise.toml is not a source they understand. Keep the nub pin here in sync
 # with the `nub-version` inputs in .github/workflows/ci.yml.
 [tools]
-nub = { version = "0.1.0", npm_args = "--ignore-scripts=false" }
+nub = { version = "0.6.0", npm_args = "--ignore-scripts=false" }
 
 [settings]
 idiomatic_version_file_enable_tools = ["node"]

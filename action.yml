@@ -9,10 +9,9 @@ branding:
 inputs:
   version:
     description: >-
-      Version of the Infisical CLI to install. Accepts an exact version with or
-      without a leading "v" (e.g. "0.43.114" or "v0.43.114"), a semver range
-      (e.g. "0", "0.43", "0.43.x", "^0.43.0") resolved against the published
-      releases, or "latest".
+      Version of the Infisical CLI to install: an exact version (e.g.
+      "0.43.114"), a semver range (e.g. "0.43.x") resolved against the
+      published releases, or "latest".
     default: latest
   checksum:
     description: >-
