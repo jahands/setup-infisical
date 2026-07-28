@@ -20,7 +20,7 @@ export async function run(): Promise<void> {
 			)
 		}
 
-		const resolved = await resolveVersion(versionInput)
+		const resolved = await resolveVersion(versionInput, authorization)
 		core.info(`Resolved Infisical CLI version: ${resolved.semver}`)
 		const target = getTarget()
 

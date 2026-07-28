@@ -8,15 +8,17 @@ export interface MockHttpResponse {
 	readBody: () => Promise<string>
 }
 
-export const get = vi.fn<(url: string) => Promise<MockHttpResponse>>()
+export const get =
+	vi.fn<(url: string, headers?: Record<string, string>) => Promise<MockHttpResponse>>()
 
 export function mockResponse(
 	statusCode: number,
-	headers: Record<string, string | undefined> = {}
+	headers: Record<string, string | undefined> = {},
+	body = ''
 ): MockHttpResponse {
 	return {
 		message: { statusCode, headers },
-		readBody: () => Promise.resolve(''),
+		readBody: () => Promise.resolve(body),
 	}
 }
 

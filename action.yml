@@ -10,7 +10,9 @@ inputs:
   version:
     description: >-
       Version of the Infisical CLI to install. Accepts an exact version with or
-      without a leading "v" (e.g. "0.43.114" or "v0.43.114"), or "latest".
+      without a leading "v" (e.g. "0.43.114" or "v0.43.114"), a semver range
+      (e.g. "0", "0.43", "0.43.x", "^0.43.0") resolved against the published
+      releases, or "latest".
     default: latest
   checksum:
     description: >-
@@ -22,8 +24,8 @@ inputs:
   github-token:
     description: >-
       Token forwarded as the Authorization header on release-asset and
-      checksum downloads from github.com (useful behind authenticating
-      proxies or for private mirrors; not required on hosted runners).
+      checksum downloads from github.com, and on GitHub API calls when
+      resolving a version range (unauthenticated API calls are rate limited).
       Defaults to the workflow token on github.com and empty on GitHub
       Enterprise Server (a GHES token is not valid against github.com).
     default: ${{ github.server_url == 'https://github.com' && github.token || '' }}

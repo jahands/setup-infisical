@@ -12,12 +12,13 @@ on the runner and adds it to `PATH`.
 - run: infisical --version
 ```
 
-Pin an exact CLI version:
+Pin an exact CLI version, or a semver range resolved against the published
+releases:
 
 ```yaml
 - uses: jahands/infisical-cli-action@v1
   with:
-    version: 0.43.114
+    version: 0.43.114 # exact; also accepts e.g. "0", "0.43.x", "^0.43.0"
 ```
 
 This action only installs the CLI. Authenticating (`infisical login`, machine
@@ -27,9 +28,9 @@ identities, OIDC) and fetching secrets are the workflow's job.
 
 | Input          | Description                                                                                                                                                                                                                      | Default                                            |
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| `version`      | Version to install: an exact version with or without a leading `v` (e.g. `0.43.114` or `v0.43.114`), or `latest`.                                                                                                                | `latest`                                           |
+| `version`      | Version to install: an exact version with or without a leading `v` (e.g. `0.43.114` or `v0.43.114`), a semver range (e.g. `0`, `0.43`, `0.43.x`, `^0.43.0`) resolved to the highest matching release, or `latest`.               | `latest`                                           |
 | `checksum`     | Expected SHA-256 (64 hex chars) of the release archive for this platform. When set, it is verified instead of the release checksum files, so the trusted digest lives in your workflow. Only meaningful with a pinned `version`. | none                                               |
-| `github-token` | Token sent as the `Authorization` header on release-asset and checksum downloads from github.com (useful behind authenticating proxies or for private mirrors; not required on hosted runners).                                  | `${{ github.token }}` on github.com; empty on GHES |
+| `github-token` | Token sent as the `Authorization` header on release-asset and checksum downloads from github.com, and on GitHub API calls when resolving a version range (unauthenticated API calls are rate limited).                           | `${{ github.token }}` on github.com; empty on GHES |
 
 ## Outputs
 
