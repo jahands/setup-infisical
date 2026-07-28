@@ -10,10 +10,10 @@ alias i := install
 # =========== Setup ============ #
 # ============================== #
 
-# Install dependencies (clean, strictly from the lockfile — same as CI)
+# Install dependencies
 [group('1. Setup')]
 install:
-  nub ci --ignore-scripts
+  nub install
 
 # ============================== #
 # ======== Development ========= #
