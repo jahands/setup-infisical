@@ -60,11 +60,22 @@ typecheck:
 knip:
   nub run knip
 
-# Fix formatting and autofixable lint issues
+# Check dependency versions are pinned and consistent (syncpack)
+[group('3. Quality')]
+deps:
+  nub run deps:check
+
+# Interactively update dependencies to their latest versions (syncpack)
+[group('3. Quality')]
+deps-update:
+  nub run deps:update
+
+# Fix formatting, autofixable lint issues, and dependency ranges
 [group('3. Quality')]
 fix:
   nub run format
   nub run lint:fix
+  nub run deps:fix
 
 # ============================== #
 # ============ Build =========== #
