@@ -1,4 +1,4 @@
-name: Setup Infisical CLI
+name: Setup Infisical
 description: Install the Infisical CLI and add it to PATH, with tool and Actions caching
 author: Jacob Hands
 
