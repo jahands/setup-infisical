@@ -1,6 +1,7 @@
 import { HttpClient } from '@actions/http-client'
 import { Result, TaggedError } from 'better-result'
 import { lt, maxSatisfying, validRange } from 'semver'
+import * as z from 'zod'
 
 import { MIN_VERSION, OWNER, REPO } from './constants.js'
 
@@ -83,7 +84,11 @@ class ReleasesParseError extends TaggedError('ReleasesParseError')<{
 			...args,
 			message:
 				'Failed to parse the GitHub releases API response: ' +
-				(args.cause instanceof Error ? args.cause.message : String(args.cause)),
+				(args.cause instanceof z.ZodError
+					? z.prettifyError(args.cause)
+					: args.cause instanceof Error
+						? args.cause.message
+						: String(args.cause)),
 		})
 	}
 }
@@ -114,6 +119,17 @@ export type VersionError =
 // Stricter than semver: rejects ranges, prereleases, and build metadata,
 // because the version is interpolated into release-tag URLs.
 const VERSION_RE = /^v?(\d+)\.(\d+)\.(\d+)$/
+
+// Only the fields this action reads; unknown keys are dropped. Requiring an
+// array here is the point — an error payload or a shape change fails in the
+// Result error channel instead of throwing a TypeError while iterating.
+const ReleasesSchema = z.array(
+	z.object({
+		tag_name: z.string().optional(),
+		draft: z.boolean().optional(),
+		prerelease: z.boolean().optional(),
+	})
+)
 
 export function normalizeVersion(
 	input: string
@@ -209,12 +225,7 @@ async function listReleaseVersions(
 				return Result.err(new GitHubApiError({ status }))
 			}
 			const releases = yield* Result.try({
-				try: () =>
-					JSON.parse(body) as Array<{
-						tag_name?: string
-						draft?: boolean
-						prerelease?: boolean
-					}>,
+				try: () => ReleasesSchema.parse(JSON.parse(body)),
 				catch: (cause) => new ReleasesParseError({ cause }),
 			})
 			for (const release of releases) {

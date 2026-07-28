@@ -152,6 +152,17 @@ describe('resolveRange', () => {
 		)
 	})
 
+	it.each([
+		['a non-array payload', '{"message":"Not Found"}'],
+		['an entry with a non-string tag_name', '[{"tag_name":42}]'],
+		['a non-JSON body', 'not json'],
+	])('errors on %s', async (_label, body) => {
+		httpClient.get.mockResolvedValueOnce(httpClient.mockResponse(200, {}, body))
+		const error = expectErr(await resolveRange('0.43.x', undefined))
+		expect(error._tag).toBe('ReleasesParseError')
+		expect(error.message).toContain('Failed to parse the GitHub releases API response')
+	})
+
 	it('errors with rate-limit guidance on HTTP 403', async () => {
 		httpClient.get.mockResolvedValueOnce(httpClient.mockResponse(403))
 		expect(expectErr(await resolveRange('0.43.x', undefined)).message).toBe(
