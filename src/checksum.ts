@@ -3,10 +3,83 @@ import { createReadStream } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { pipeline } from 'node:stream/promises'
 import * as tc from '@actions/tool-cache'
+import { Result, TaggedError } from 'better-result'
 
 import { getDownloadUrl } from './platform.js'
 
 import type { Target } from './platform.js'
+
+class ChecksumMismatchError extends TaggedError('ChecksumMismatchError')<{
+	assetName: string
+	expected: string
+	actual: string
+	message: string
+}>() {
+	constructor(args: {
+		assetName: string
+		expected: string
+		actual: string
+		source: 'input' | 'release'
+	}) {
+		const { source, ...props } = args
+		super({
+			...props,
+			message:
+				source === 'input'
+					? `SHA-256 mismatch for ${args.assetName}: the "checksum" input expected ` +
+						`${args.expected}, got ${args.actual}. The download may be ` +
+						'corrupted or tampered with, or the input may be for a different ' +
+						'version or platform.'
+					: `SHA-256 mismatch for ${args.assetName}: expected ${args.expected}, got ` +
+						`${args.actual}. The download may be corrupted or tampered with.`,
+		})
+	}
+}
+
+class ChecksumEntryNotFoundError extends TaggedError('ChecksumEntryNotFoundError')<{
+	assetName: string
+	tag: string
+	tried: string[]
+	message: string
+}>() {
+	constructor(args: { assetName: string; tag: string; tried: string[] }) {
+		super({
+			...args,
+			message:
+				`No SHA-256 entry for ${args.assetName} found in the release checksum files ` +
+				`(tried: ${args.tried.join(', ')}) for ${args.tag}.`,
+		})
+	}
+}
+
+class ChecksumDownloadError extends TaggedError('ChecksumDownloadError')<{
+	candidate: string
+	message: string
+	cause: unknown
+}>() {
+	constructor(args: { candidate: string; cause: unknown }) {
+		super({
+			...args,
+			message: args.cause instanceof Error ? args.cause.message : String(args.cause),
+		})
+	}
+}
+
+class ChecksumReadError extends TaggedError('ChecksumReadError')<{
+	path: string
+	message: string
+	cause: unknown
+}>() {
+	constructor(args: { path: string; cause: unknown }) {
+		super({
+			...args,
+			message: args.cause instanceof Error ? args.cause.message : String(args.cause),
+		})
+	}
+}
+
+export type ChecksumError =
+	ChecksumMismatchError | ChecksumEntryNotFoundError | ChecksumDownloadError | ChecksumReadError
 
 // Parse `<64-hex><whitespace><filename>` lines. Split on a whitespace run,
 // tolerate an optional '*' binary-mode prefix on the filename, lowercase hex.
@@ -21,10 +94,15 @@ export function parseChecksumFile(contents: string): Map<string, string> {
 	return entries
 }
 
-async function sha256(filePath: string): Promise<string> {
-	const hash = createHash('sha256')
-	await pipeline(createReadStream(filePath), hash)
-	return hash.digest('hex')
+function sha256(filePath: string): Promise<Result<string, ChecksumReadError>> {
+	return Result.tryPromise({
+		try: async () => {
+			const hash = createHash('sha256')
+			await pipeline(createReadStream(filePath), hash)
+			return hash.digest('hex')
+		},
+		catch: (cause) => new ChecksumReadError({ path: filePath, cause }),
+	})
 }
 
 function checksumCandidates(semver: string, target: Target): string[] {
@@ -51,49 +129,56 @@ export async function verifyChecksum(
 	target: Target,
 	authorization: string | undefined,
 	providedChecksum?: string
-): Promise<void> {
-	// A user-provided checksum (reviewed in the workflow diff) takes
-	// precedence over the checksum files published with the release.
-	if (providedChecksum) {
-		const actual = await sha256(archivePath)
-		if (actual !== providedChecksum) {
-			throw new Error(
-				`SHA-256 mismatch for ${assetName}: the "checksum" input expected ` +
-					`${providedChecksum}, got ${actual}. The download may be ` +
-					'corrupted or tampered with, or the input may be for a different ' +
-					'version or platform.'
-			)
+): Promise<Result<void, ChecksumError>> {
+	return Result.gen(async function* () {
+		// A user-provided checksum (reviewed in the workflow diff) takes
+		// precedence over the checksum files published with the release.
+		if (providedChecksum) {
+			const actual = yield* Result.await(sha256(archivePath))
+			if (actual !== providedChecksum) {
+				return Result.err(
+					new ChecksumMismatchError({
+						assetName,
+						expected: providedChecksum,
+						actual,
+						source: 'input',
+					})
+				)
+			}
+			return Result.ok()
 		}
-		return
-	}
-	const tried: string[] = []
-	for (const candidate of checksumCandidates(semver, target)) {
-		tried.push(candidate)
-		let checksumPath: string
-		try {
-			checksumPath = await tc.downloadTool(getDownloadUrl(tag, candidate), undefined, authorization)
-		} catch (error) {
-			if (error instanceof tc.HTTPError && error.httpStatusCode === 404) {
+		const tried: string[] = []
+		for (const candidate of checksumCandidates(semver, target)) {
+			tried.push(candidate)
+			const downloaded = await Result.tryPromise({
+				try: () => tc.downloadTool(getDownloadUrl(tag, candidate), undefined, authorization),
+				catch: (cause) => new ChecksumDownloadError({ candidate, cause }),
+			})
+			if (downloaded.isErr()) {
+				const { cause } = downloaded.error
+				if (cause instanceof tc.HTTPError && cause.httpStatusCode === 404) {
+					continue
+				}
+				return downloaded
+			}
+			const contents = yield* Result.await(
+				Result.tryPromise({
+					try: () => readFile(downloaded.value, 'utf8'),
+					catch: (cause) => new ChecksumReadError({ path: downloaded.value, cause }),
+				})
+			)
+			const expected = parseChecksumFile(contents).get(assetName)
+			if (!expected) {
 				continue
 			}
-			throw error
+			const actual = yield* Result.await(sha256(archivePath))
+			if (actual !== expected) {
+				return Result.err(
+					new ChecksumMismatchError({ assetName, expected, actual, source: 'release' })
+				)
+			}
+			return Result.ok()
 		}
-		const entries = parseChecksumFile(await readFile(checksumPath, 'utf8'))
-		const expected = entries.get(assetName)
-		if (!expected) {
-			continue
-		}
-		const actual = await sha256(archivePath)
-		if (actual !== expected) {
-			throw new Error(
-				`SHA-256 mismatch for ${assetName}: expected ${expected}, got ` +
-					`${actual}. The download may be corrupted or tampered with.`
-			)
-		}
-		return
-	}
-	throw new Error(
-		`No SHA-256 entry for ${assetName} found in the release checksum files ` +
-			`(tried: ${tried.join(', ')}) for ${tag}.`
-	)
+		return Result.err(new ChecksumEntryNotFoundError({ assetName, tag, tried }))
+	})
 }

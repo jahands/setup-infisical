@@ -1,4 +1,5 @@
 import { getAssetName, getDownloadUrl, getTarget } from '../src/platform.js'
+import { expectErr } from './helpers.js'
 
 describe('getTarget / getAssetName', () => {
 	const cases: Array<
@@ -20,7 +21,7 @@ describe('getTarget / getAssetName', () => {
 	]
 
 	it.each(cases)('%s/%s -> %s', (nodePlatform, nodeArch, assetName, archiveType, binaryName) => {
-		const target = getTarget(nodePlatform, nodeArch)
+		const target = getTarget(nodePlatform, nodeArch).unwrap()
 		expect(target.archiveType).toBe(archiveType)
 		expect(target.binaryName).toBe(binaryName)
 		expect(getAssetName('0.43.114', target)).toBe(assetName)
@@ -32,9 +33,11 @@ describe('getTarget / getAssetName', () => {
 		['win32', 'arm'],
 		['aix', 'ppc64'],
 	] as Array<[NodeJS.Platform, NodeJS.Architecture]>)(
-		'throws for unsupported %s/%s',
+		'errors for unsupported %s/%s',
 		(nodePlatform, nodeArch) => {
-			expect(() => getTarget(nodePlatform, nodeArch)).toThrow(
+			const error = expectErr(getTarget(nodePlatform, nodeArch))
+			expect(error._tag).toBe('UnsupportedPlatformError')
+			expect(error.message).toBe(
 				`Unsupported platform/architecture: ${nodePlatform}/${nodeArch}. ` +
 					'Supported: linux (x64, arm64), macOS (x64, arm64), Windows (x64, arm64).'
 			)
@@ -44,7 +47,7 @@ describe('getTarget / getAssetName', () => {
 
 describe('getDownloadUrl', () => {
 	it('embeds the v-prefixed tag in the URL and the bare semver in the asset', () => {
-		const target = getTarget('linux', 'x64')
+		const target = getTarget('linux', 'x64').unwrap()
 		const assetName = getAssetName('0.43.114', target)
 		expect(getDownloadUrl('v0.43.114', assetName)).toBe(
 			'https://github.com/Infisical/cli/releases/download/v0.43.114/cli_0.43.114_linux_amd64.tar.gz'

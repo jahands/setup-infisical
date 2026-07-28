@@ -1,4 +1,5 @@
 import * as httpClient from '../__fixtures__/http-client.js'
+import { expectErr } from './helpers.js'
 
 vi.mock('@actions/http-client', () => import('../__fixtures__/http-client.js'))
 
@@ -17,28 +18,32 @@ function mockReleasesPage(tags: string[], extras: object[] = []) {
 
 describe('normalizeVersion', () => {
 	it('accepts a bare semver', () => {
-		expect(normalizeVersion('0.43.114')).toEqual({
+		expect(normalizeVersion('0.43.114').unwrap()).toEqual({
 			tag: 'v0.43.114',
 			semver: '0.43.114',
 		})
 	})
 
 	it('accepts a v-prefixed semver', () => {
-		expect(normalizeVersion('v0.43.114')).toEqual({
+		expect(normalizeVersion('v0.43.114').unwrap()).toEqual({
 			tag: 'v0.43.114',
 			semver: '0.43.114',
 		})
 	})
 
 	it.each(['0.43', '0.43.114-beta', 'main', ''])('rejects %j', (input) => {
-		expect(() => normalizeVersion(input)).toThrow(
+		const error = expectErr(normalizeVersion(input))
+		expect(error._tag).toBe('InvalidVersionError')
+		expect(error.message).toBe(
 			`Invalid version "${input}". Expected an exact version like "0.43.114", ` +
 				'a semver range like "0.43.x", or "latest".'
 		)
 	})
 
 	it('rejects versions below the Infisical/cli floor', () => {
-		expect(() => normalizeVersion('0.41.90')).toThrow(
+		const error = expectErr(normalizeVersion('0.41.90'))
+		expect(error._tag).toBe('VersionTooOldError')
+		expect(error.message).toBe(
 			'Version 0.41.90 predates the Infisical/cli repository (oldest ' +
 				'available: 0.41.91). Older CLI builds were published from the legacy ' +
 				'Infisical/infisical monorepo and are not supported by this action.'
@@ -46,7 +51,7 @@ describe('normalizeVersion', () => {
 	})
 
 	it('accepts the floor version itself', () => {
-		expect(normalizeVersion('0.41.91')).toEqual({
+		expect(normalizeVersion('0.41.91').unwrap()).toEqual({
 			tag: 'v0.41.91',
 			semver: '0.41.91',
 		})
@@ -60,16 +65,16 @@ describe('resolveLatest', () => {
 				location: 'https://github.com/Infisical/cli/releases/tag/v0.43.114',
 			})
 		)
-		await expect(resolveLatest()).resolves.toEqual({
+		expect((await resolveLatest()).unwrap()).toEqual({
 			tag: 'v0.43.114',
 			semver: '0.43.114',
 		})
 		expect(httpClient.get).toHaveBeenCalledWith('https://github.com/Infisical/cli/releases/latest')
 	})
 
-	it('throws when the response is not a redirect', async () => {
+	it('errors when the response is not a redirect', async () => {
 		httpClient.get.mockResolvedValueOnce(httpClient.mockResponse(200))
-		await expect(resolveLatest()).rejects.toThrow(
+		expect(expectErr(await resolveLatest()).message).toBe(
 			'Failed to resolve the latest Infisical CLI version: expected a ' +
 				'redirect from https://github.com/Infisical/cli/releases/latest but ' +
 				'got HTTP 200. Pin an exact version via the "version" input to work ' +
@@ -77,13 +82,13 @@ describe('resolveLatest', () => {
 		)
 	})
 
-	it('throws when the redirect location has no version tag', async () => {
+	it('errors when the redirect location has no version tag', async () => {
 		httpClient.get.mockResolvedValueOnce(
 			httpClient.mockResponse(302, {
 				location: 'https://github.com/Infisical/cli/releases',
 			})
 		)
-		await expect(resolveLatest()).rejects.toThrow(
+		expect(expectErr(await resolveLatest()).message).toContain(
 			'could not parse a version tag from the redirect location'
 		)
 	})
@@ -92,7 +97,7 @@ describe('resolveLatest', () => {
 describe('resolveRange', () => {
 	it('picks the highest release satisfying the range', async () => {
 		mockReleasesPage(['v0.43.114', 'v0.43.90', 'v0.42.5'])
-		await expect(resolveRange('0.43.x', undefined)).resolves.toEqual({
+		expect((await resolveRange('0.43.x', undefined)).unwrap()).toEqual({
 			tag: 'v0.43.114',
 			semver: '0.43.114',
 		})
@@ -121,7 +126,7 @@ describe('resolveRange', () => {
 				{},
 			]
 		)
-		await expect(resolveRange('0.43.x || 0.42.x', undefined)).resolves.toEqual({
+		expect((await resolveRange('0.43.x || 0.42.x', undefined)).unwrap()).toEqual({
 			tag: 'v0.42.5',
 			semver: '0.42.5',
 		})
@@ -130,33 +135,35 @@ describe('resolveRange', () => {
 	it('paginates past a full page', async () => {
 		mockReleasesPage(Array.from({ length: 100 }, (_, i) => `v0.43.${i}`))
 		mockReleasesPage(['v0.42.5'])
-		await expect(resolveRange('0.42.x', undefined)).resolves.toEqual({
+		expect((await resolveRange('0.42.x', undefined)).unwrap()).toEqual({
 			tag: 'v0.42.5',
 			semver: '0.42.5',
 		})
 		expect(httpClient.get).toHaveBeenCalledTimes(2)
 	})
 
-	it('throws when no release satisfies the range', async () => {
+	it('errors when no release satisfies the range', async () => {
 		mockReleasesPage(['v0.43.114'])
-		await expect(resolveRange('1.x', undefined)).rejects.toThrow(
+		const error = expectErr(await resolveRange('1.x', undefined))
+		expect(error._tag).toBe('NoMatchingReleaseError')
+		expect(error.message).toBe(
 			'No Infisical CLI release satisfies the version range "1.x". See ' +
 				'https://github.com/Infisical/cli/releases for available versions.'
 		)
 	})
 
-	it('throws with rate-limit guidance on HTTP 403', async () => {
+	it('errors with rate-limit guidance on HTTP 403', async () => {
 		httpClient.get.mockResolvedValueOnce(httpClient.mockResponse(403))
-		await expect(resolveRange('0.43.x', undefined)).rejects.toThrow(
+		expect(expectErr(await resolveRange('0.43.x', undefined)).message).toBe(
 			'Failed to list Infisical/cli releases from the GitHub API (HTTP 403). ' +
 				'This is likely API rate limiting; pass a "github-token" or pin an ' +
 				'exact version via the "version" input.'
 		)
 	})
 
-	it('throws with generic guidance on other HTTP errors', async () => {
+	it('errors with generic guidance on other HTTP errors', async () => {
 		httpClient.get.mockResolvedValueOnce(httpClient.mockResponse(500))
-		await expect(resolveRange('0.43.x', undefined)).rejects.toThrow(
+		expect(expectErr(await resolveRange('0.43.x', undefined)).message).toBe(
 			'Failed to list Infisical/cli releases from the GitHub API (HTTP 500). ' +
 				'Pin an exact version via the "version" input to work around this.'
 		)
@@ -170,7 +177,7 @@ describe('resolveVersion', () => {
 				location: 'https://github.com/Infisical/cli/releases/tag/v0.43.114',
 			})
 		)
-		await expect(resolveVersion(input)).resolves.toEqual({
+		expect((await resolveVersion(input)).unwrap()).toEqual({
 			tag: 'v0.43.114',
 			semver: '0.43.114',
 		})
@@ -178,7 +185,7 @@ describe('resolveVersion', () => {
 	})
 
 	it('makes zero network calls for an exact version', async () => {
-		await expect(resolveVersion('v0.42.5')).resolves.toEqual({
+		expect((await resolveVersion('v0.42.5')).unwrap()).toEqual({
 			tag: 'v0.42.5',
 			semver: '0.42.5',
 		})
@@ -189,7 +196,7 @@ describe('resolveVersion', () => {
 		'resolves the range %j via the releases API',
 		async (input) => {
 			mockReleasesPage(['v0.43.114', 'v0.42.5'])
-			await expect(resolveVersion(input, 'Bearer token123')).resolves.toEqual({
+			expect((await resolveVersion(input, 'Bearer token123')).unwrap()).toEqual({
 				tag: 'v0.43.114',
 				semver: '0.43.114',
 			})
@@ -197,7 +204,7 @@ describe('resolveVersion', () => {
 	)
 
 	it('rejects input that is neither a version, range, nor "latest"', async () => {
-		await expect(resolveVersion('main')).rejects.toThrow('Invalid version "main".')
+		expect(expectErr(await resolveVersion('main')).message).toContain('Invalid version "main".')
 		expect(httpClient.get).not.toHaveBeenCalled()
 	})
 })
