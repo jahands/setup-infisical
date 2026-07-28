@@ -37,7 +37,7 @@
 	"devDependencies": {
 		"@github/local-action": "7.0.1",
 		"@ianvs/prettier-plugin-sort-imports": "4.7.1",
-		"@types/node": "24.13.3",
+		"@types/node": "26.1.1",
 		"@types/semver": "7.7.1",
 		"@vitest/coverage-v8": "4.1.10",
 		"esbuild": "0.28.1",
