@@ -1,0 +1,18 @@
+amends "package://github.com/jdx/hk/releases/download/v1.47.0/hk@1.47.0#/Config.pkl"
+
+// Runners execute the committed dist/ bundle, so any commit that changes
+// src/ or dependencies must include the rebuilt dist/ (CI check-dist fails
+// on drift). This rebuilds and stages it automatically at commit time.
+hooks {
+    ["pre-commit"] {
+        fix = true
+        stash = "git"
+        steps {
+            ["bundle"] {
+                glob = List("src/**/*", "package.json", "package-lock.json")
+                stage = List("dist/**")
+                fix = "nub run bundle"
+            }
+        }
+    }
+}

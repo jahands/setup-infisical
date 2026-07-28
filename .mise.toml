@@ -4,6 +4,7 @@
 # with the `nub-version` inputs in .github/workflows/ci.yml.
 [tools]
 nub = { version = "0.6.0", npm_args = "--ignore-scripts=false" }
+hk = "1.47.0"
 
 [settings]
 idiomatic_version_file_enable_tools = ["node"]

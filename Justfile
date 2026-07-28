@@ -14,6 +14,7 @@ alias i := install
 [group('1. Setup')]
 install:
   nub install
+  hk install
 
 # ============================== #
 # ======== Development ========= #
