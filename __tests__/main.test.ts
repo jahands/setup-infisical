@@ -20,7 +20,7 @@ const { getTarget, getAssetName } = await import('../src/platform.js')
 
 const SEMVER = '0.43.114'
 const TAG = 'v0.43.114'
-const target = getTarget() // host platform; tests derive expectations from it
+const target = getTarget().unwrap() // host platform; tests derive expectations from it
 const assetName = getAssetName(SEMVER, target)
 const extractMock = target.archiveType === 'zip' ? tc.extractZip : tc.extractTar
 const cacheKey = `infisical-cli-2-${SEMVER}-${target.platform}-${target.arch}`
@@ -302,7 +302,7 @@ describe('run', () => {
 	it('handles windows targets: zip extraction, infisical.exe, no chmod', async () => {
 		const restoreHost = stubHostTarget('win32', 'x64')
 		try {
-			const winTarget = getTarget('win32', 'x64')
+			const winTarget = getTarget('win32', 'x64').unwrap()
 			setInputs(SEMVER)
 			cache.isFeatureAvailable.mockReturnValue(false)
 			mockDownloads(winTarget)
