@@ -1,0 +1,9 @@
+# Node itself is pinned in .node-version (read idiomatically below) because
+# nub and nubjs/setup-nub in ci.yml resolve the project pin from that file —
+# .mise.toml is not a source they understand. Keep the nub pin here in sync
+# with the `nub-version` inputs in .github/workflows/ci.yml.
+[tools]
+nub = { version = "0.1.0", npm_args = "--ignore-scripts=false" }
+
+[settings]
+idiomatic_version_file_enable_tools = ["node"]

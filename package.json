@@ -1,45 +1,47 @@
 {
-  "name": "infisical-cli-action",
-  "description": "GitHub Action to install the Infisical CLI",
-  "version": "1.0.0",
-  "license": "MIT",
-  "author": "Jacob Hands",
-  "private": true,
-  "type": "module",
-  "engines": {
-    "node": ">=24.0.0"
-  },
-  "scripts": {
-    "bundle": "esbuild src/index.ts --bundle --platform=node --target=node24 --format=esm --keep-names --banner:js=\"import { createRequire as __createRequire } from 'node:module'; const require = __createRequire(import.meta.url);\" --outfile=dist/index.js && nub run license",
-    "license": "generate-license-file --input package.json --output dist/licenses.txt --overwrite --ci --no-spinner --eol lf",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "lint": "oxlint --type-aware --max-warnings=0 .",
-    "lint:fix": "oxlint --type-aware --fix .",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "coverage": "vitest run --coverage",
-    "knip": "knip",
-    "local-action": "local-action . src/main.ts .env",
-    "all": "nub run format:check && nub run lint && nub run typecheck && nub run knip && nub run test && nub run bundle"
-  },
-  "dependencies": {
-    "@actions/cache": "^6.2.0",
-    "@actions/core": "^3.0.1",
-    "@actions/http-client": "^4.0.1",
-    "@actions/tool-cache": "^4.0.0"
-  },
-  "devDependencies": {
-    "@github/local-action": "^7.0.1",
-    "@types/node": "^24.0.0",
-    "@vitest/coverage-v8": "^4.1.10",
-    "esbuild": "^0.28.1",
-    "generate-license-file": "^4.1.1",
-    "knip": "^6.29.0",
-    "oxlint": "1.75.0",
-    "oxlint-tsgolint": "7.0.2001",
-    "prettier": "^3.9.6",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.10"
-  }
+	"name": "infisical-cli-action",
+	"version": "1.0.0",
+	"private": true,
+	"description": "GitHub Action to install the Infisical CLI",
+	"license": "MIT",
+	"author": "Jacob Hands",
+	"type": "module",
+	"scripts": {
+		"all": "nub run format:check && nub run lint && nub run typecheck && nub run knip && nub run test && nub run bundle",
+		"bundle": "esbuild src/index.ts --bundle --platform=node --target=node24 --format=esm --keep-names --banner:js=\"import { createRequire as __createRequire } from 'node:module'; const require = __createRequire(import.meta.url);\" --outfile=dist/index.js && nub run license",
+		"coverage": "vitest run --coverage",
+		"format": "prettier --write .",
+		"format:check": "prettier --check .",
+		"knip": "knip",
+		"license": "generate-license-file --input package.json --output dist/licenses.txt --overwrite --ci --no-spinner --eol lf",
+		"lint": "oxlint --type-aware --max-warnings=0 .",
+		"lint:fix": "oxlint --type-aware --fix .",
+		"local-action": "local-action . src/main.ts .env",
+		"test": "vitest run",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@actions/cache": "^6.2.0",
+		"@actions/core": "^3.0.1",
+		"@actions/http-client": "^4.0.1",
+		"@actions/tool-cache": "^4.0.0"
+	},
+	"devDependencies": {
+		"@github/local-action": "^7.0.1",
+		"@ianvs/prettier-plugin-sort-imports": "^4.4.2",
+		"@types/node": "^24.0.0",
+		"@vitest/coverage-v8": "^4.1.10",
+		"esbuild": "^0.28.1",
+		"generate-license-file": "^4.1.1",
+		"knip": "^6.29.0",
+		"oxlint": "1.75.0",
+		"oxlint-tsgolint": "7.0.2001",
+		"prettier": "^3.9.6",
+		"prettier-plugin-packagejson": "^2.5.20",
+		"typescript": "^6.0.3",
+		"vitest": "^4.1.10"
+	},
+	"engines": {
+		"node": ">=24.0.0"
+	}
 }

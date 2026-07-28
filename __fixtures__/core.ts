@@ -1,5 +1,6 @@
-import type * as core from '@actions/core'
 import { vi } from 'vitest'
+
+import type * as core from '@actions/core'
 
 export const getInput = vi.fn<typeof core.getInput>()
 export const setOutput = vi.fn<typeof core.setOutput>()

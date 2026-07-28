@@ -21,8 +21,12 @@ agents alike.
 - The package manager / script runner is nub (`nub ci`, `nub run`); the
   lockfile stays in npm format (`package-lock.json`), which keeps
   Dependabot and lockfile-keyed caches working. CI installs nub via
-  `nubjs/setup-nub` pinned to the same version as local dev — bump the
-  `nub-version` inputs in ci.yml together with local installs.
+  `nubjs/setup-nub` pinned to the same version as local dev (pinned in
+  `.mise.toml`) — bump the `nub-version` inputs in ci.yml together with
+  the `.mise.toml` pin.
+- Node stays pinned in `.node-version` (not `.mise.toml`): nub and
+  `nubjs/setup-nub` resolve the project pin from that file, and mise
+  reads it idiomatically, so it is the single source of truth.
 - `nub ci --ignore-scripts` then `nub run all` (format check, lint,
   typecheck, knip, tests, bundle) must pass before pushing.
 - Linting is oxlint (`oxlint.config.ts`), run type-aware via

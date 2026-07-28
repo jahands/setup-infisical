@@ -70624,11 +70624,7 @@ async function verifyChecksum(archivePath, assetName, tag, semver4, target, auth
     tried.push(candidate);
     let checksumPath;
     try {
-      checksumPath = await downloadTool(
-        getDownloadUrl(tag, candidate),
-        void 0,
-        authorization
-      );
+      checksumPath = await downloadTool(getDownloadUrl(tag, candidate), void 0, authorization);
     } catch (error2) {
       if (error2 instanceof HTTPError && error2.httpStatusCode === 404) {
         continue;
@@ -70658,10 +70654,7 @@ __name(verifyChecksum, "verifyChecksum");
 function getArchiveCacheDir(semver4, target) {
   const runnerTemp = process.env.RUNNER_TEMP;
   if (!runnerTemp) return void 0;
-  return path13.join(
-    runnerTemp,
-    `infisical-cli-archive-${semver4}-${target.platform}-${target.arch}`
-  );
+  return path13.join(runnerTemp, `infisical-cli-archive-${semver4}-${target.platform}-${target.arch}`);
 }
 __name(getArchiveCacheDir, "getArchiveCacheDir");
 async function install(version3, target, authorization, providedChecksum) {
@@ -70682,9 +70675,7 @@ async function install(version3, target, authorization, providedChecksum) {
   const cacheKey = `${CACHE_KEY_PREFIX}-${semver4}-${target.platform}-${target.arch}`;
   const cacheAvailable = archiveDir !== void 0 && isFeatureAvailable();
   if (!cacheAvailable) {
-    info(
-      "GitHub Actions cache service is not available; skipping cache restore"
-    );
+    info("GitHub Actions cache service is not available; skipping cache restore");
   }
   let archivePath;
   let cacheHit = false;
@@ -70877,9 +70868,7 @@ async function run() {
     setOutput("version", resolved.semver);
     setOutput("cache-hit", String(cacheHit));
     setOutput("infisical-path", path14.join(toolPath, target.binaryName));
-    info(
-      `Infisical CLI ${resolved.semver} installed at ${toolPath} (cache hit: ${cacheHit})`
-    );
+    info(`Infisical CLI ${resolved.semver} installed at ${toolPath} (cache hit: ${cacheHit})`);
   } catch (error2) {
     setFailed(error2 instanceof Error ? error2.message : String(error2));
     return;
