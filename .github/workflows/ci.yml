@@ -24,7 +24,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup nub
-        uses: nubjs/setup-nub@47e5e7393d50f4e9544ddaf756aa277972afba2d # v0.4.0
+        uses: nubjs/setup-nub@21b317c170eee658503996209cf87b63481be35a # v0.5.0
         with:
           nub-version: 0.6.0
           node-version-file: .node-version
@@ -60,7 +60,7 @@ jobs:
         uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
 
       - name: zizmor
-        uses: zizmorcore/zizmor-action@6fc4b006235f201fdab3722e17240ab420d580e5 # v0.6.1
+        uses: zizmorcore/zizmor-action@70fb788f84895a7701f5643d103d587e460b5c99 # v0.6.3
         with:
           advanced-security: false
           online-audits: false
@@ -198,7 +198,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup nub
-        uses: nubjs/setup-nub@47e5e7393d50f4e9544ddaf756aa277972afba2d # v0.4.0
+        uses: nubjs/setup-nub@21b317c170eee658503996209cf87b63481be35a # v0.5.0
         with:
           nub-version: 0.6.0
           node-version-file: .node-version
