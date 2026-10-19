@@ -27,7 +27,7 @@ jobs:
       pull-requests: read # enumerate merged PRs and labels for the changelog
     steps:
       - name: Update the release draft
-        uses: release-drafter/release-drafter@eada3c96a64734dd381cfbda23511034e328ddb0 # v7.6.0
+        uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
         with:
           commitish: ${{ github.sha }}
         env:
@@ -44,6 +44,6 @@ jobs:
       pull-requests: write # apply labels to the pull request
     steps:
       - name: Apply labels from the PR title
-        uses: release-drafter/release-drafter/autolabeler@eada3c96a64734dd381cfbda23511034e328ddb0 # v7.6.0
+        uses: release-drafter/release-drafter/autolabeler@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
         env:
           GITHUB_TOKEN: ${{ github.token }}
